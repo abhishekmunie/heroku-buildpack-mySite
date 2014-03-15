@@ -1,0 +1,11 @@
+{
+  "name": "mySite-buildpack",
+  "version": "1.0.1",
+  "engines": {
+    "node": ">=0.10.15",
+    "npm": ">=1.2.0"
+  },
+  "dependencies": {
+    "mySite":     "https://github.com/abhishekmunie/mySite.git"
+  }
+}

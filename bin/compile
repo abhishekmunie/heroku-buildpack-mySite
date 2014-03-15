@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+# fail fast
+set -e
+
+# parse args
+BUILD_DIR=$1
+CACHE_DIR=$2
+
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
+
+source $BUILD_DIR/_mySite.cfg
+
+LP_DIR=`cd $(dirname $0); cd ..; pwd`
+
+# Install Jekyll into hidden directory in app root
+echo "-----> Installing Jekyll gem"
+RUBY_BUILD_DIR=$(mktemp -d -t ruby_build.XXXXXX)
+gem install jekyll --no-rdoc --no-ri --install-dir $RUBY_BUILD_DIR/.gem | indent
+export GEM_PATH=$RUBY_BUILD_DIR/.gem:$GEM_PATH
+
+# Compile Jekyll site into BUILD_DIR
+echo "-----> Compiling Jekyll site"
+mv $BUILD_DIR/* $JEKYLL_BUILD_DIR
+JEKYLL_BUILD_DIR=$(mktemp -d -t jekyll_build.XXXXXX)
+jekyll build --source $JEKYLL_BUILD_DIR --destination $BUILD_DIR
+
+
+# Node Installation --------------------------
+echo "-----> Installing Node and build dependencies..."
+NODE_BUILDPACK_DIR=$(mktemp -d -t node.XXXXXX)
+git clone --quiet https://github.com/heroku/heroku-buildpack-nodejs.git $NODE_BUILDPACK_DIR
+mv $LP_DIR/vendor/package-mySite.json $BUILD_DIR/package.json
+$NODE_BUILDPACK_DIR/bin/compile $BUILD_DIR $CACHE_DIR
+echo "       done."
+
+# Run mySite
+echo "Running mySite" | indent
+mySite --source $BUILD_DIR serve
+
+# Cleanup -----------------------------------
+rm -fr $NODE_BUILDPACK_DIR
+rm -fr $RUBY_BUILD_DIR
+rm -fr $JEKYLL_BUILD_DIR
