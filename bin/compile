@@ -37,7 +37,8 @@ export GEM_HOME=$RUBY_BUILD_DIR/vendor/ruby-2.0.0/gems
 export GEM_PATH=$RUBY_BUILD_DIR/vendor/ruby-2.0.0/lib/ruby/2.0.0:$RUBY_BUILD_DIR/vendor/bundle:$GEM_PATH
 export PATH=$RUBY_BUILD_DIR/vendor/bundle/bin:$PATH
 $RUBY_BUILDPACK_DIR/bin/release $RUBY_BUILD_DIR
-# source $RUBY_BUILDPACK_DIR/bin/release
+
+env
 
 # Compile Jekyll site into BUILD_DIR
 echo "-----> Compiling Jekyll site"
