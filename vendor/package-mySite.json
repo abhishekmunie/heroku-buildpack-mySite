@@ -1,6 +1,7 @@
 {
   "name": "mySite-buildpack",
   "version": "1.0.1",
+  "description": "Official mySite buildpack for heroku",
   "engines": {
     "node": "0.10.x",
     "npm": "1.x.x"
@@ -10,5 +11,10 @@
   },
   "dependencies": {
     "mySite": "abhishekmunie/mySite"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abhishekmunie/heroku-buildpack-mySite.git"
+  },
+  "readmeFilename": "README.md"
 }
