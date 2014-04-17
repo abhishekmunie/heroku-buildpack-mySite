@@ -45,8 +45,8 @@ export PATH=$RUBY_BUILD_DIR/bin:$RUBY_BUILD_DIR/vendor/bundle/bin:$RUBY_BUILD_DI
 
 # Compile Jekyll site into BUILD_DIR
 echo "-----> Compiling Jekyll site"
-mv $build_dir/* $JEKYLL_BUILD_DIR
 JEKYLL_BUILD_DIR=$(mktemp -d -t jekyll_build.XXXXXX)
+mv $build_dir/* $JEKYLL_BUILD_DIR
 jekyll build --source $JEKYLL_BUILD_DIR --destination $build_dir
 
 # Node Installation --------------------------
