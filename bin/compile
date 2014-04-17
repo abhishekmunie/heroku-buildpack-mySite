@@ -30,7 +30,7 @@ RUBY_BUILD_DIR=$(mktemp -d -t ruby_build.XXXXXX)
 git clone --quiet https://github.com/heroku/heroku-buildpack-ruby.git $RUBY_BUILDPACK_DIR
 chmod -f +x $RUBY_BUILDPACK_DIR/bin/{detect,compile,release} || true
 mv $bp_dir/vendor/Gemfile-jekyll $RUBY_BUILD_DIR/Gemfile
-$(cd $RUBY_BUILD_DIR; bundle install)
+mv $bp_dir/vendor/Gemfile-jekyll.lock $RUBY_BUILD_DIR/Gemfile.lock
 $RUBY_BUILDPACK_DIR/bin/compile $RUBY_BUILD_DIR $cache_dir
 
 ls -R $RUBY_BUILD_DIR
