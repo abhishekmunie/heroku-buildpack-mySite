@@ -32,7 +32,7 @@ chmod -f +x $RUBY_BUILDPACK_DIR/bin/{detect,compile,release} || true
 mv $bp_dir/vendor/Gemfile-jekyll $RUBY_BUILD_DIR/Gemfile
 mv $bp_dir/vendor/Gemfile-jekyll.lock $RUBY_BUILD_DIR/Gemfile.lock
 $RUBY_BUILDPACK_DIR/bin/compile $RUBY_BUILD_DIR $cache_dir #>/dev/null
-ls -R $RUBY_BUILD_DIR/vendor/ruby-2.0.0/gems
+ls -R $RUBY_BUILD_DIR/vendor/ruby-2.0.0/
 export GEM_HOME=$RUBY_BUILD_DIR/vendor/ruby-2.0.0/gems
 export GEM_PATH=$RUBY_BUILD_DIR/vendor/ruby-2.0.0/lib/ruby/2.0.0:$RUBY_BUILD_DIR/vendor/bundle:$GEM_PATH
 export PATH=$RUBY_BUILD_DIR/vendor/bundle/bin:$PATH
