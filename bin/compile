@@ -35,6 +35,8 @@ $RUBY_BUILDPACK_DIR/bin/compile $RUBY_BUILD_DIR $cache_dir #>/dev/null
 export GEM_HOME=$RUBY_BUILD_DIR/vendor/bundle/ruby/2.1.0
 export GEM_PATH=$RUBY_BUILD_DIR/vendor/bundle/ruby/2.1.0:$GEM_PATH
 export PATH=$RUBY_BUILD_DIR/bin:$RUBY_BUILD_DIR/vendor/bundle/bin:$RUBY_BUILD_DIR/vendor/bundle/ruby/2.1.0/bin:$PATH
+
+env
 # $RUBY_BUILDPACK_DIR/bin/release $RUBY_BUILD_DIR
 
 # status "Installing Jekyll and dependencies..."
