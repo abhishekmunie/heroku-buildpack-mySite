@@ -6,7 +6,7 @@
     "npm": "1.x.x"
   },
   "scripts": {
-    "start": "mySite --source . serve"
+    "start": "mysite --source . serve"
   },
   "dependencies": {
     "mySite": "abhishekmunie/mySite"
