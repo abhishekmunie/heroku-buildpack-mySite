@@ -2,10 +2,10 @@
   "name": "mySite-buildpack",
   "version": "1.0.1",
   "engines": {
-    "node": ">=0.10.15",
-    "npm": ">=1.2.0"
+    "node": "0.10.x",
+    "npm": "1.x.x"
   },
   "dependencies": {
-    "mySite":     "https://github.com/abhishekmunie/mySite.git"
+    "mySite": "abhishekmunie/mySite"
   }
 }

@@ -1,51 +1,78 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir>
 
-# fail fast
-set -e
+set -e            # fail fast
+set -o pipefail   # don't ignore exit codes when piping output
+# set -x          # enable debugging
 
-# parse args
-BUILD_DIR=$1
-CACHE_DIR=$2
+# Configure directories
+build_dir=$1
+cache_dir=$2
+env_dir=$3
 
-function indent() {
-  c='s/^/       /'
-  case $(uname) in
-    Darwin) sed -l "$c";;
-    *)      sed -u "$c";;
-  esac
-}
+bp_dir=$(cd $(dirname $0); cd ..; pwd)
 
-source $BUILD_DIR/_mySite.cfg
+# clean up leaking environment
+unset GIT_DIR
 
-LP_DIR=`cd $(dirname $0); cd ..; pwd`
+# Load some convenience functions like status(), echo(), and indent()
+source $bp_dir/bin/common.sh
 
-# Install Jekyll into hidden directory in app root
-echo "-----> Installing Jekyll gem"
+source "$build_dir/_mySite.cfg"
+
+mv --help
+
+if [ ! -e $build_dir/Procfile ]; then
+  Generate_Procfile=true
+fi
+
+status "Installing Ruby and build dependencies..."
+RUBY_BUILDPACK_DIR=$(mktemp -d -t ruby.XXXXXX)
 RUBY_BUILD_DIR=$(mktemp -d -t ruby_build.XXXXXX)
-gem install jekyll --no-rdoc --no-ri --install-dir $RUBY_BUILD_DIR/.gem | indent
-export GEM_PATH=$RUBY_BUILD_DIR/.gem:$GEM_PATH
+git clone --quiet https://github.com/heroku/heroku-buildpack-nodejs.git $RUBY_BUILDPACK_DIR
+chmod -f +x $RUBY_BUILDPACK_DIR/bin/{detect,compile,release} || true
+mv $bp_dir/vendor/Gemfile-jekyll $RUBY_BUILD_DIR/Gemfile
+$RUBY_BUILDPACK_DIR/bin/compile $RUBY_BUILD_DIR $cache_dir
+
+ls -R $RUBY_BUILD_DIR
 
 # Compile Jekyll site into BUILD_DIR
 echo "-----> Compiling Jekyll site"
-mv $BUILD_DIR/* $JEKYLL_BUILD_DIR
+mv $build_dir/* $JEKYLL_BUILD_DIR
 JEKYLL_BUILD_DIR=$(mktemp -d -t jekyll_build.XXXXXX)
-jekyll build --source $JEKYLL_BUILD_DIR --destination $BUILD_DIR
-
+jekyll build --source $JEKYLL_BUILD_DIR --destination $build_dir
 
 # Node Installation --------------------------
-echo "-----> Installing Node and build dependencies..."
+status "Installing Node and build dependencies..."
 NODE_BUILDPACK_DIR=$(mktemp -d -t node.XXXXXX)
 git clone --quiet https://github.com/heroku/heroku-buildpack-nodejs.git $NODE_BUILDPACK_DIR
-mv $LP_DIR/vendor/package-mySite.json $BUILD_DIR/package.json
-$NODE_BUILDPACK_DIR/bin/compile $BUILD_DIR $CACHE_DIR
-echo "       done."
+chmod -f +x $NODE_BUILDPACK_DIR/bin/{detect,compile,release} || true
+mv $bp_dir/vendor/package-mySite.json $BUILD_DIR/package.json
+$NODE_BUILDPACK_DIR/bin/compile $build_dir $cache_dir
 
-# Run mySite
-echo "Running mySite" | indent
-mySite --source $BUILD_DIR serve
+if [ $Generate_Procfile ]; then
+  npm_start=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .scripts.start)
+
+  # If Procfile is absent, try to create one using `npm start`
+  # If `scripts.start` is set in package.json, or a server.js file
+  # is present in the app root, then create a default Procfile
+  if [ "$npm_start" != "null" ] || [ -f $build_dir/server.js ]; then
+    status "No Procfile found; Adding npm start to new Procfile"
+    echo "web: npm start" > $build_dir/Procfile
+  else
+    status "Procfile not found and npm start script is undefined"
+    status "Creating default Procfile"
+    echo "web: mySite --source . serve" > $build_dir/Procfile
+  fi
+fi
+
+# # Update the PATH
+# status "Building runtime environment"
+# mkdir -p $build_dir/.profile.d
+# echo "export PATH=\" :\$PATH\";" > $build_dir/.profile.d/mySite.sh
 
 # Cleanup -----------------------------------
-rm -fr $NODE_BUILDPACK_DIR
+rm -fr $RUBY_BUILDPACK_DIR
 rm -fr $RUBY_BUILD_DIR
 rm -fr $JEKYLL_BUILD_DIR
+rm -fr $NODE_BUILDPACK_DIR
