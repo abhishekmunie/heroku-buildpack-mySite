@@ -20,6 +20,8 @@ source $bp_dir/bin/common.sh
 
 source "$build_dir/_mySite.cfg"
 
+ruby --version
+
 if [ ! -e $build_dir/Procfile ]; then
   Generate_Procfile=true
 fi
