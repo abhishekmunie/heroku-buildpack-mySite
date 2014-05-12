@@ -47,12 +47,15 @@ export PATH=$RUBY_BUILD_DIR/bin:$RUBY_BUILD_DIR/vendor/bundle/bin:$RUBY_BUILD_DI
 status "Compiling Jekyll site"
 JEKYLL_BUILD_DIR=$(mktemp -d -t jekyll_build.XXXXXX)
 mv $build_dir/* $JEKYLL_BUILD_DIR
+curr_dir=$(pwd)
+cd $JEKYLL_BUILD_DIR
 if [[ ! $JEKYLL_CONFIG_FILE ]]; then
   jekyll build --source $JEKYLL_BUILD_DIR --destination $build_dir
 else
   echo "Using config files: $JEKYLL_CONFIG_FILE " | indent
   jekyll build --config $JEKYLL_CONFIG_FILE --source $JEKYLL_BUILD_DIR --destination $build_dir
 fi
+cd $curr_dir
 
 # Node Installation --------------------------
 status "Installing Node and build dependencies..."
