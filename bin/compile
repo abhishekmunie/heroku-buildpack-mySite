@@ -25,9 +25,11 @@ if [ ! -f $build_dir/Procfile ]; then
 fi
 
 if [ -f $build_dir/Gemfile ] && [ -f $build_dir/Gemfile.lock ]; then
+  status "Using existing Gemfile and Gemfile.lock"
   mv $build_dir/Gemfile $ruby_build_dir/
   mv $build_dir/Gemfile.lock $ruby_build_dir/
 else
+  status "Vendoring default Gemfile and Gemfile.lock"
   mv $bp_dir/vendor/Gemfile $ruby_build_dir/
   mv $bp_dir/vendor/Gemfile.lock $ruby_build_dir/
 fi
