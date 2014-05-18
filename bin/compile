@@ -24,6 +24,8 @@ if [ ! -f $build_dir/Procfile ]; then
   Generate_Procfile=true
 fi
 
+ruby_build_dir=$(mktemp -d -t ruby_build.XXXXXX)
+
 if [ -f $build_dir/Gemfile ] && [ -f $build_dir/Gemfile.lock ]; then
   status "Using existing Gemfile and Gemfile.lock"
   mv $build_dir/Gemfile $ruby_build_dir/
@@ -36,7 +38,6 @@ fi
 
 status "Installing Ruby, Jekyll and dependencies..."
 ruby_buildpack_dir=$(mktemp -d -t ruby.XXXXXX)
-ruby_build_dir=$(mktemp -d -t ruby_build.XXXXXX)
 git clone --quiet https://github.com/heroku/heroku-buildpack-ruby.git $ruby_buildpack_dir
 chmod -f +x $ruby_buildpack_dir/bin/{detect,compile,release} || true
 $ruby_buildpack_dir/bin/compile $ruby_build_dir $cache_dir #>/dev/null
