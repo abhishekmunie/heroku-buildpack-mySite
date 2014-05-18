@@ -20,50 +20,51 @@ source $bp_dir/bin/common.sh
 
 source "$build_dir/_mySite.cfg"
 
-if [ ! -e $build_dir/Procfile ]; then
+if [ ! -f $build_dir/Procfile ]; then
   Generate_Procfile=true
 fi
 
-status "Installing Ruby, Jekyll and dependencies..."
-RUBY_BUILDPACK_DIR=$(mktemp -d -t ruby.XXXXXX)
-RUBY_BUILD_DIR=$(mktemp -d -t ruby_build.XXXXXX)
-git clone --quiet https://github.com/heroku/heroku-buildpack-ruby.git $RUBY_BUILDPACK_DIR
-chmod -f +x $RUBY_BUILDPACK_DIR/bin/{detect,compile,release} || true
-mv $bp_dir/vendor/Gemfile-jekyll $RUBY_BUILD_DIR/Gemfile
-mv $bp_dir/vendor/Gemfile-jekyll.lock $RUBY_BUILD_DIR/Gemfile.lock
-$RUBY_BUILDPACK_DIR/bin/compile $RUBY_BUILD_DIR $cache_dir #>/dev/null
-export GEM_HOME=$RUBY_BUILD_DIR/vendor/bundle/ruby/2.1.0
-export GEM_PATH=$RUBY_BUILD_DIR/vendor/bundle/ruby/2.1.0:$GEM_PATH
-export PATH=$RUBY_BUILD_DIR/bin:$RUBY_BUILD_DIR/vendor/bundle/bin:$RUBY_BUILD_DIR/vendor/bundle/ruby/2.1.0/bin:$PATH
+if [ -f $build_dir/Gemfile ] && [ -f $build_dir/Gemfile.lock ]; then
+  mv $build_dir/Gemfile $ruby_build_dir/
+  mv $build_dir/Gemfile.lock $ruby_build_dir/
+else
+  mv $bp_dir/vendor/Gemfile $ruby_build_dir/
+  mv $bp_dir/vendor/Gemfile.lock $ruby_build_dir/
+fi
 
-# $RUBY_BUILDPACK_DIR/bin/release $RUBY_BUILD_DIR
+status "Installing Ruby, Jekyll and dependencies..."
+ruby_buildpack_dir=$(mktemp -d -t ruby.XXXXXX)
+ruby_build_dir=$(mktemp -d -t ruby_build.XXXXXX)
+git clone --quiet https://github.com/heroku/heroku-buildpack-ruby.git $ruby_buildpack_dir
+chmod -f +x $ruby_buildpack_dir/bin/{detect,compile,release} || true
+$ruby_buildpack_dir/bin/compile $ruby_build_dir $cache_dir #>/dev/null
+export GEM_HOME=$ruby_build_dir/vendor/bundle/ruby/2.1.0
+export GEM_PATH=$ruby_build_dir/vendor/bundle/ruby/2.1.0:$GEM_PATH
+export PATH=$ruby_build_dir/bin:$ruby_build_dir/vendor/bundle/bin:$ruby_build_dir/vendor/bundle/ruby/2.1.0/bin:$PATH
+
+# $ruby_buildpack_dir/bin/release $ruby_build_dir
 
 # status "Installing Jekyll and dependencies..."
-# RUBY_BUILD_DIR=$(mktemp -d -t ruby_build.XXXXXX)
-# gem install jekyll --no-rdoc --no-ri --install-dir $RUBY_BUILD_DIR/.gem | indent
-# export GEM_PATH=$RUBY_BUILD_DIR/.gem:$GEM_PATH
+# ruby_build_dir=$(mktemp -d -t ruby_build.XXXXXX)
+# gem install jekyll --no-rdoc --no-ri --install-dir $ruby_build_dir/.gem | indent
+# export GEM_PATH=$ruby_build_dir/.gem:$GEM_PATH
 
 # Compile Jekyll site into BUILD_DIR
 status "Compiling Jekyll site"
-JEKYLL_BUILD_DIR=$(mktemp -d -t jekyll_build.XXXXXX)
-mv $build_dir/* $JEKYLL_BUILD_DIR
+jekyll_build_dir=$(mktemp -d -t jekyll_build.XXXXXX)
+mv $build_dir/* $jekyll_build_dir
 curr_dir=$(pwd)
-cd $JEKYLL_BUILD_DIR
-if [[ ! $JEKYLL_CONFIG_FILE ]]; then
-  jekyll build --source $JEKYLL_BUILD_DIR --destination $build_dir
-else
-  echo "Using config files: $JEKYLL_CONFIG_FILE " | indent
-  jekyll build --config $JEKYLL_CONFIG_FILE --source $JEKYLL_BUILD_DIR --destination $build_dir
-fi
+cd $jekyll_build_dir
+jekyll build $jekyll_config --source $jekyll_build_dir --destination $build_dir
 cd $curr_dir
 
 # Node Installation --------------------------
 status "Installing Node and build dependencies..."
-NODE_BUILDPACK_DIR=$(mktemp -d -t node.XXXXXX)
-git clone --quiet https://github.com/heroku/heroku-buildpack-nodejs.git $NODE_BUILDPACK_DIR
-chmod -f +x $NODE_BUILDPACK_DIR/bin/{detect,compile,release} || true
+node_buildpack_dir=$(mktemp -d -t node.XXXXXX)
+git clone --quiet https://github.com/heroku/heroku-buildpack-nodejs.git $node_buildpack_dir
+chmod -f +x $node_buildpack_dir/bin/{detect,compile,release} || true
 mv $bp_dir/vendor/package-mySite.json $build_dir/package.json
-$NODE_BUILDPACK_DIR/bin/compile $build_dir $cache_dir
+$node_buildpack_dir/bin/compile $build_dir $cache_dir
 
 if [ $Generate_Procfile ]; then
   npm_start=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .scripts.start)
@@ -86,7 +87,7 @@ fi
 # echo "export PATH=\" :\$PATH\";" > $build_dir/.profile.d/mySite.sh
 
 # Cleanup -----------------------------------
-rm -fr $RUBY_BUILDPACK_DIR
-rm -fr $RUBY_BUILD_DIR
-rm -fr $JEKYLL_BUILD_DIR
-rm -fr $NODE_BUILDPACK_DIR
+rm -fr $ruby_buildpack_dir
+rm -fr $ruby_build_dir
+rm -fr $jekyll_build_dir
+rm -fr $node_buildpack_dir
